@@ -27,6 +27,10 @@ Simple HTML + JavaScript game built with [Kaboom.js](https://kaboomjs.com/).
 4. Collect all **yellow coins** to advance to the next level.
 5. Avoid the **green enemy squares** — touching them ends the game.
 
+## Levels
+Level-1
+Level-2 
+
 ## Game Over
 
 When the game ends, a message will appear: **"Game Over / Press Tab or any key to continue"**. Pressing any key (including Tab) will open the game in a new browser tab so you can start fresh.
