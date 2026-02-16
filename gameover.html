@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Game Over</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #000;
+        color: #fff;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .container {
+        max-width: 600px;
+      }
+
+      h1 {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #ff0000;
+        text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+      }
+
+      p {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        color: #ccc;
+      }
+
+      .instruction {
+        font-size: 1.2rem;
+        color: #888;
+        margin-top: 3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>GAME OVER</h1>
+      <p>Please try again</p>
+      <p class="instruction">Press Tab or any key to continue</p>
+    </div>
+
+    <script>
+      // Open the main game in a new tab when any key is pressed
+      function handleKeyPress() {
+        window.open("index.html", "_blank");
+        window.removeEventListener("keydown", handleKeyPress);
+      }
+
+      window.addEventListener("keydown", handleKeyPress);
+    </script>
+  </body>
+</html>

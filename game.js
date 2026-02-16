@@ -1,8 +1,7 @@
 // Initialize kaboom (provided globally by script tag in index.html)
 kaboom({
   global: true,
-  width: 960,
-  height: 540,
+  // No width/height specified = fullscreen
   canvas: null,
   root: document.querySelector("#game"),
   background: [0, 0, 140], // deep blue
@@ -18,9 +17,21 @@ setGravity(GRAVITY);
 
 let score = 0;
 
+// Calculate text size based on screen height (responsive)
+function getTextSize() {
+  return Math.max(24, height() * 0.04);
+}
+
 const scoreLabel = add([
-  text("Score: 0", { size: 28 }),
+  text("Score: 0", { size: getTextSize() }),
   pos(32, 24),
+  color(255, 255, 255),
+  fixed(),
+]);
+
+let levelLabel = add([
+  text("Level: 1", { size: getTextSize() }),
+  pos(32, 60),
   color(255, 255, 255),
   fixed(),
 ]);
@@ -28,13 +39,14 @@ const scoreLabel = add([
 let gameOverLabel = null;
 let isGameOver = false;
 let restartListener = null;
+let gameOverTabOpened = false; // Prevent multiple tab opens
 
 function showGameOver() {
   if (gameOverLabel) return;
 
   gameOverLabel = add([
-    text("Game Over\nPress any key (Space / Tab) to restart", {
-      size: 32,
+    text("Game Over\nPress Tab or any key to continue", {
+      size: Math.max(32, height() * 0.06),
       align: "center",
     }),
     pos(width() / 2, height() / 2),
@@ -53,70 +65,80 @@ function hideGameOver() {
 }
 
 // Level definitions (platforms, coins, enemies, player start)
-const levels = [
-  {
-    start: vec2(80, 0),
-    platforms: [
-      // ground
-      { pos: vec2(0, 520), size: vec2(960, 40) },
-      // floating platforms
-      { pos: vec2(120, 420), size: vec2(160, 24) },
-      { pos: vec2(360, 360), size: vec2(180, 24) },
-      { pos: vec2(640, 320), size: vec2(160, 24) },
-      { pos: vec2(260, 280), size: vec2(140, 24) },
-      { pos: vec2(520, 240), size: vec2(160, 24) },
-    ],
-    coins: [
-      vec2(170, 380),
-      vec2(210, 380),
-      vec2(400, 320),
-      vec2(440, 320),
-      vec2(680, 280),
-      vec2(720, 280),
-      vec2(300, 240),
-      vec2(540, 200),
-      vec2(580, 200),
-    ],
-    enemies: [
-      { pos: vec2(360, 320), range: 80, speed: 80 },
-      { pos: vec2(640, 280), range: 80, speed: 80 },
-      { pos: vec2(260, 240), range: 80, speed: 80 },
-    ],
-  },
-  {
-    // Level 2: different layout, more coins / enemies
-    start: vec2(80, 0),
-    platforms: [
-      { pos: vec2(0, 520), size: vec2(960, 40) },
-      { pos: vec2(140, 430), size: vec2(120, 24) },
-      { pos: vec2(340, 380), size: vec2(140, 24) },
-      { pos: vec2(580, 330), size: vec2(180, 24) },
-      { pos: vec2(760, 280), size: vec2(120, 24) },
-      { pos: vec2(260, 260), size: vec2(120, 24) },
-      { pos: vec2(440, 210), size: vec2(140, 24) },
-    ],
-    coins: [
-      vec2(160, 390),
-      vec2(200, 390),
-      vec2(360, 340),
-      vec2(400, 340),
-      vec2(620, 290),
-      vec2(660, 290),
-      vec2(780, 240),
-      vec2(300, 220),
-      vec2(460, 170),
-      vec2(500, 170),
-    ],
-    enemies: [
-      { pos: vec2(340, 340), range: 100, speed: 90 },
-      { pos: vec2(580, 290), range: 100, speed: 100 },
-      { pos: vec2(760, 240), range: 60, speed: 110 },
-    ],
-  },
-];
+// Uses functions to calculate positions based on screen size for fullscreen support
+function getLevels() {
+  const w = width();
+  const h = height();
+  const groundY = h - 20;
+  const platformHeight = 24;
+  
+  return [
+    {
+      start: vec2(80, 0),
+      platforms: [
+        // ground
+        { pos: vec2(0, groundY), size: vec2(w, 40) },
+        // floating platforms
+        { pos: vec2(w * 0.125, groundY - 100), size: vec2(w * 0.167, platformHeight) },
+        { pos: vec2(w * 0.375, groundY - 160), size: vec2(w * 0.188, platformHeight) },
+        { pos: vec2(w * 0.667, groundY - 200), size: vec2(w * 0.167, platformHeight) },
+        { pos: vec2(w * 0.271, groundY - 240), size: vec2(w * 0.146, platformHeight) },
+        { pos: vec2(w * 0.542, groundY - 280), size: vec2(w * 0.167, platformHeight) },
+      ],
+      coins: [
+        vec2(w * 0.177, groundY - 140),
+        vec2(w * 0.219, groundY - 140),
+        vec2(w * 0.417, groundY - 200),
+        vec2(w * 0.458, groundY - 200),
+        vec2(w * 0.708, groundY - 240),
+        vec2(w * 0.750, groundY - 240),
+        vec2(w * 0.313, groundY - 280),
+        vec2(w * 0.563, groundY - 320),
+        vec2(w * 0.604, groundY - 320),
+      ],
+      enemies: [
+        { pos: vec2(w * 0.375, groundY - 200), range: w * 0.083, speed: 80 },
+        { pos: vec2(w * 0.667, groundY - 240), range: w * 0.083, speed: 80 },
+        { pos: vec2(w * 0.271, groundY - 280), range: w * 0.083, speed: 80 },
+      ],
+    },
+    {
+      // Level 2: different layout, more coins / enemies
+      start: vec2(80, 0),
+      platforms: [
+        { pos: vec2(0, groundY), size: vec2(w, 40) },
+        { pos: vec2(w * 0.146, groundY - 90), size: vec2(w * 0.125, platformHeight) },
+        { pos: vec2(w * 0.354, groundY - 140), size: vec2(w * 0.146, platformHeight) },
+        { pos: vec2(w * 0.604, groundY - 190), size: vec2(w * 0.188, platformHeight) },
+        { pos: vec2(w * 0.792, groundY - 240), size: vec2(w * 0.125, platformHeight) },
+        { pos: vec2(w * 0.271, groundY - 260), size: vec2(w * 0.125, platformHeight) },
+        { pos: vec2(w * 0.458, groundY - 310), size: vec2(w * 0.146, platformHeight) },
+      ],
+      coins: [
+        vec2(w * 0.167, groundY - 130),
+        vec2(w * 0.208, groundY - 130),
+        vec2(w * 0.375, groundY - 180),
+        vec2(w * 0.417, groundY - 180),
+        vec2(w * 0.646, groundY - 230),
+        vec2(w * 0.688, groundY - 230),
+        vec2(w * 0.813, groundY - 280),
+        vec2(w * 0.313, groundY - 300),
+        vec2(w * 0.479, groundY - 350),
+        vec2(w * 0.521, groundY - 350),
+      ],
+      enemies: [
+        { pos: vec2(w * 0.354, groundY - 180), range: w * 0.104, speed: 90 },
+        { pos: vec2(w * 0.604, groundY - 230), range: w * 0.104, speed: 100 },
+        { pos: vec2(w * 0.792, groundY - 280), range: w * 0.063, speed: 110 },
+      ],
+    },
+  ];
+}
+
+let levels = [];
 
 let currentLevel = 0;
-let playerStart = levels[0].start.clone();
+let playerStart = vec2(80, 0);
 let player = null;
 
 // ---- helpers to spawn things ----
@@ -221,12 +243,21 @@ function createPlayer(startPos) {
     score += 1;
     scoreLabel.text = `Score: ${score}`;
 
-    // If all coins for this level are gone, go to next level
-    if (get("coin").length === 0) {
-      // next level (wrap around to level 0 after last)
-      const next = (currentLevel + 1) % levels.length;
-      startLevel(next);
-    }
+    // Check if all coins collected - use a small delay to ensure coin is destroyed
+    wait(0.1, () => {
+      if (isGameOver) return;
+      const remainingCoins = get("coin").length;
+      if (remainingCoins === 0) {
+        // Move to next level (2 levels total: 0 and 1)
+        const nextLevel = currentLevel + 1;
+        if (nextLevel < levels.length) {
+          startLevel(nextLevel);
+        } else {
+          // All levels completed - restart from level 0
+          startLevel(0);
+        }
+      }
+    });
   });
 
   // Hit enemy: game over
@@ -236,7 +267,7 @@ function createPlayer(startPos) {
 
   // Fall off: game over
   obj.onUpdate(() => {
-    if (!isGameOver && obj.pos.y > 800) {
+    if (!isGameOver && obj.pos.y > height() + 100) {
       triggerGameOver();
     }
   });
@@ -250,8 +281,16 @@ function resetPlayerToStart() {
 }
 
 function startLevel(index) {
+  // Update levels based on current screen size
+  levels = getLevels();
   currentLevel = index;
   const def = levels[index];
+  
+  // Update level indicator
+  levelLabel.text = `Level: ${index + 1}`;
+  
+  // Reset game over tab flag when starting a new level
+  gameOverTabOpened = false;
 
   // Clear old level objects
   destroyAll("platform");
@@ -284,17 +323,13 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   shake(6);
-  showGameOver();
-
-  // Listen once for "any key" to restart current level
-  if (restartListener) restartListener.cancel();
-  restartListener = onKeyPress(() => {
-    restartListener.cancel();
-    restartListener = null;
-    score = 0;
-    scoreLabel.text = "Score: 0";
-    startLevel(currentLevel);
-  });
+  
+  // Immediately open game over page in a new tab (only once)
+  if (!gameOverTabOpened && typeof window !== "undefined" && window.location) {
+    gameOverTabOpened = true;
+    const gameOverUrl = new URL("gameover.html", window.location.href).href;
+    window.open(gameOverUrl, "_blank");
+  }
 }
 
 // Start the first level
