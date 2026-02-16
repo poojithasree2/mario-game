@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kaboom Platformer Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        background: #111;
+        color: #fff;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      header {
+        padding: 0.5rem 1rem;
+        background: #181818;
+        border-bottom: 1px solid #262626;
+        font-size: 0.9rem;
+      }
+
+      main {
+        flex: 1;
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Controls</strong> – Left / Right arrows or A / D to move, Space
+      or Up arrow to jump
+    </header>
+    <main id="game"></main>
+
+    <!-- Kaboom.js via CDN (classic script, works from file://) -->
+    <script src="https://unpkg.com/kaboom@3000.0.1/dist/kaboom.js"></script>
+    <!-- Game logic in a separate JavaScript file -->
+    <script src="./game.js"></script>
+  </body>
+  </html>
+
